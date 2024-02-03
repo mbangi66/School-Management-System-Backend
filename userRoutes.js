@@ -45,4 +45,21 @@ router.post('/login', async (req, res) => {
   });
 });
 
+// Check if a username is available
+router.post('/users/check-username', (req, res) => {
+  const { username } = req.body;
+
+  // Check if the username exists in the database
+  db.get('SELECT * FROM users WHERE username = ?', [username], (err, user) => {
+    if (err) {
+      res.status(500).json({ error: 'Error checking username availability.' });
+      return;
+    }
+
+    // If user is null, the username is available; otherwise, it's taken
+    const isAvailable = !user;
+    res.json({ isAvailable });
+  });
+});
+
 module.exports = router;
