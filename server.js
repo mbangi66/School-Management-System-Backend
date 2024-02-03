@@ -2,10 +2,13 @@ const express = require('express');
 const db = require('./db');
 const bodyParser = require('body-parser');
 const userRoutes = require('./userRoutes');
+const cors = require('cors')
 const authenticateToken = require('./authMiddleware');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+app.use(cors())
 
 app.use('/users', userRoutes);
 
