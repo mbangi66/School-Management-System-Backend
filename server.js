@@ -1,9 +1,13 @@
 const express = require('express');
 const db = require('./db');
 const bodyParser = require('body-parser');
+const userRoutes = require('./userRoutes');
+const authenticateToken = require('./authMiddleware');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+app.use('/users', userRoutes);
 
 app.use(bodyParser.json());
 
@@ -71,6 +75,10 @@ app.delete('/students/:id', (req, res) => {
   
       res.json({ success: true });
     });
+});
+
+app.get('/protected', authenticateToken, (req, res) => {
+    res.json({ message: 'This route is protected.' });
 });
 
 app.listen(PORT, () => {
