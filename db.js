@@ -10,7 +10,11 @@ db.run(`
     name TEXT,
     grade TEXT,
     age INTEGER,
-    subject TEXT
+    subject TEXT,
+    year INTEGER, 
+    class TEXT, 
+    type TEXT, 
+    photo BLOB 
   )
 `);
 
