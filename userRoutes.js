@@ -7,20 +7,49 @@ const bodyParser = require('body-parser');
 
 router.use(bodyParser.json());
 
-// User Registration
+// Check if a username is available
+router.post('/check-username', async (req, res) => {
+  const { username } = req.body;
+
+  try {
+    // Check if the username exists in the database
+    const existingUser = await db.get('SELECT * FROM users WHERE username = ?', [username]);
+
+    // If user is null, the username is available; otherwise, it's taken
+    const isAvailable = !existingUser;
+    res.json({ isAvailable });
+  } catch (error) {
+    console.error('Error checking username availability:', error);
+    res.status(500).json({ error: 'Error checking username availability.' });
+  }
+});
+
 router.post('/register', async (req, res) => {
   const { username, password } = req.body;
 
-  // Hash the password
-  const hashedPassword = await bcrypt.hash(password, 10);
+  try {
+    // Check if the username is available
+    const isAvailable = await db.get('SELECT * FROM users WHERE username = ?', [username]);
 
-  // Insert user into the database
-  db.run('INSERT INTO users (username, password) VALUES (?, ?)', [username, hashedPassword], (err) => {
-    if (err) {
-      return res.status(500).json({ error: 'Error registering user.' });
+    if (!isAvailable) {
+      return res.status(400).json({ error: 'Username is already taken. Please choose a different username.' });
     }
-    res.json({ success: true, message: 'User registered successfully.' });
-  });
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert user into the database
+    db.run('INSERT INTO users (username, password) VALUES (?, ?)', [username, hashedPassword], function (err) {
+      if (err) {
+        return res.status(500).json({ error: 'Error registering user.' });
+      }
+
+      res.json({ success: true, message: 'User registered successfully.' });
+    });
+  } catch (error) {
+    console.error('Error during registration:', error);
+    res.status(500).json({ error: 'Error during registration.' });
+  }
 });
 
 // User Login
@@ -42,23 +71,6 @@ router.post('/login', async (req, res) => {
     } else {
       res.status(401).json({ error: 'Invalid username or password.' });
     }
-  });
-});
-
-// Check if a username is available
-router.post('/users/check-username', (req, res) => {
-  const { username } = req.body;
-
-  // Check if the username exists in the database
-  db.get('SELECT * FROM users WHERE username = ?', [username], (err, user) => {
-    if (err) {
-      res.status(500).json({ error: 'Error checking username availability.' });
-      return;
-    }
-
-    // If user is null, the username is available; otherwise, it's taken
-    const isAvailable = !user;
-    res.json({ isAvailable });
   });
 });
 
