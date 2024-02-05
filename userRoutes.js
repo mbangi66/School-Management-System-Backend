@@ -2,8 +2,13 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const db = require('./db');
 const bodyParser = require('body-parser');
+const crypto = require('crypto');
+const sqlite3 = require('sqlite3').verbose(); 
+const db = new sqlite3.Database('./database.db');
+
+// Generate a random secret key
+const secretKey = crypto.randomBytes(32).toString('hex');
 
 router.use(bodyParser.json());
 
@@ -65,7 +70,7 @@ router.post('/login', async (req, res) => {
     // Check password
     if (user && await bcrypt.compare(password, user.password)) {
       // Generate JWT token
-      const token = jwt.sign({ username: user.username }, 'your-secret-key', { expiresIn: '1h' });
+      const token = jwt.sign({ username: user.username }, secretKey, { expiresIn: '1h' });
 
       res.json({ success: true, token });
     } else {
